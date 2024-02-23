@@ -33,7 +33,7 @@ resource "aws_ecs_service" "servicio-pry" {
   name            = "servicio-pry"
   cluster         = aws_ecs_cluster.cluster-pry.id
   task_definition = aws_ecs_task_definition.tarea-pry.arn
-  desired_count   = 2  # Cambia a la cantidad de instancias que deseas ejecutar
+  desired_count   = 1
 
   # Configuración del servicio para Fargate
   launch_type = "FARGATE"
@@ -41,7 +41,12 @@ resource "aws_ecs_service" "servicio-pry" {
   # Configuración de red
   network_configuration {
     subnets          = [aws_subnet.sub-ext2-proyecto.id, aws_subnet.sub-ext1-proyecto.id]  
-    assign_public_ip = false
+    assign_public_ip = true
     security_groups  = [aws_security_group.security-grp-pry.id]  # Reemplaza con tu grupo de seguridad
+  }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.targer-frp-pry.arn
+    container_name   = "contenedor-pry"
+    container_port   = 80
   }
 }

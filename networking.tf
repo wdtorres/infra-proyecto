@@ -97,10 +97,10 @@ resource "aws_security_group" "security-grp-pry" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] 
+    cidr_blocks = ["0.0.0.0/0"]  # Permite el tráfico desde cualquier IP en el puerto 80
   }
-  
-  #Reglas de salida
+
+  //reglas de salida
   egress {
     from_port        = 0
     to_port          = 0
