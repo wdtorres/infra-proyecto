@@ -41,7 +41,7 @@ resource "aws_ecs_service" "servicio-pry" {
   # Configuración de red
   network_configuration {
     subnets          = [aws_subnet.sub-ext2-proyecto.id, aws_subnet.sub-ext1-proyecto.id]  
-    assign_public_ip = true
+    assign_public_ip = false
     security_groups  = [aws_security_group.security-grp-pry.id]  # Reemplaza con tu grupo de seguridad
   }
 }

@@ -81,11 +81,11 @@ resource "aws_lb_listener" "listener-pry" {
 }
 
 # Crear una regla de enrutamiento para el balanceador de carga
-resource "aws_lb_target_group_attachment" "tarjetgrp-pry" {
-  target_group_arn = aws_lb_target_group.targer-frp-pry.arn
-  target_id        = aws_lb.balance-proy.id
-  port             = 80
-}
+#resource "aws_lb_target_group_attachment" "tarjetgrp-pry" {
+#  target_group_arn = aws_lb_target_group.targer-frp-pry.arn
+#  target_id        = contenedor-pry.id
+#  port             = 80
+#}
 
 resource "aws_security_group" "security-grp-pry" {
   name        = "security-grp-pry"
