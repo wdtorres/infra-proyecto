@@ -6,11 +6,6 @@ resource "aws_s3_bucket" "b" {
   }
 }
 
-resource "aws_s3_bucket_acl" "b_acl" {
-  bucket = aws_s3_bucket.b.id
-  acl    = "private"
-}
-
 locals {
   s3_origin_id = "myS3Origin"
 }
@@ -18,7 +13,7 @@ locals {
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
     domain_name              = aws_s3_bucket.b.bucket_regional_domain_name
-    origin_access_control_id = aws_cloudfront_origin_access_identity.oriaccessidenti.id
+    origin_access_control_id = aws_cloudfront_origin_access_control.oriaccessidenti.id
     origin_id                = local.s3_origin_id
   }
 
@@ -27,13 +22,13 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   comment             = "Cloud front distribution"
   default_root_object = "index.html"
 
-  logging_config {
-    include_cookies = false
-    bucket          = "mylogs.s3.amazonaws.com"
-    prefix          = "proyecto-infra"
-  }
+  #logging_config {
+  #  include_cookies = false
+  #  bucket          = "mylogs.s3.amazonaws.com"
+  #  prefix          = "proyecto-infra"
+  #}
 
-  #aliases = ["mysite.example.com", "yoursite.example.com"]
+  aliases = []
 
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
@@ -113,37 +108,50 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = false
+    cloudfront_default_certificate = true
   }
 }
 
-resource "aws_cloudfront_origin_access_identity" "oriaccessidenti" {
-  comment = "infra-proyecto-ide"
+#resource "aws_cloudfront_origin_access_identity" "oriaccessidenti" {
+#  comment = "infra-proyecto-ide"
+#}
+
+resource "aws_cloudfront_origin_access_control" "oriaccessidenti" {
+  name                              = "oriaccessidenti"
+  description                       = "Access Policy"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
-resource "aws_s3_bucket_policy" "my_bucket_policy" {
+resource "aws_s3_bucket_policy" "bucket_policy_py" {
   bucket = aws_s3_bucket.b.id
+  policy = data.aws_iam_policy_document.policy_docu_pf.json
+}
 
-  policy = jsonencode(
-    {
-        "Version": "2008-10-17",
-        "Id": "PolicyForCloudFrontPrivateContent",
-        "Statement": [
-            {
-                "Sid": "AllowCloudFrontServicePrincipal",
-                "Effect": "Allow",
-                "Principal": {
-                    "Service": "cloudfront.amazonaws.com"
-                },
-                "Action": "s3:GetObject",
-                "Resource": "arn:aws:s3:::buck-david-estado-tf01/*",
-                "Condition": {
-                    "StringEquals": {
-                        "AWS:SourceArn": "arn:aws:cloudfront::730335645538:distribution/aws_cloudfront_distribution.s3_distribution.id"
-                    }
-                }
-            }
-        ]
+## Revisar este codigo: DATA
+data "aws_iam_policy_document" "policy_docu_pf" {
+  policy_id = "PolicyForCloudFrontPrivateContent"
+  version   = "2008-10-17"
+  statement {
+    sid     = "AllowCloudFrontServicePrincipal"
+    effect  = "Allow"
+    actions = ["s3:GetObject", "s3:ListBucket"]
+
+    resources = [
+      "${aws_s3_bucket.b.arn}/*",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+
+      values = [aws_cloudfront_distribution.s3_distribution.arn]
     }
-  )
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+  }
 }
