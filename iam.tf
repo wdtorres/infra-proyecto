@@ -47,3 +47,26 @@ resource "aws_iam_role_policy_attachment" "task_s3" {
   role       = "${aws_iam_role.ecs_task_role.name}"
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
+
+data "aws_iam_policy_document" "ecr_policy" {
+  statement {
+    actions = [
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "ecr:BatchCheckLayerAvailability"
+    ]
+
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "ecr_policy" {
+  name        = "ecs-ecr-policy"
+  description = "Policy to allow ECS to access ECR"
+  policy      = data.aws_iam_policy_document.ecr_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_ecr_policy_attachment" {
+  policy_arn = aws_iam_policy.ecr_policy.arn
+  role       = aws_iam_role.ecs_task_execution_role.name
+}
