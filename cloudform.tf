@@ -1,35 +1,44 @@
 resource "aws_s3_bucket" "b" {
-  bucket = "bucket-proyfinal-devops-0209"
+  bucket = "infra-proyecto-final0902"
 
   tags = {
-    Name = "bucket-proyfinal-devops-0209"
+    Name = "Bucket-infra-pry"
   }
 }
 
-locals {
-  s3_origin_id = "miS3Origen"
+resource "aws_s3_bucket_acl" "b_acl" {
+  bucket = aws_s3_bucket.b.id
+  acl    = "private"
 }
 
-resource "aws_cloudfront_distribution" "s3_proy-devops" {
-  origin {
-    domain_name = "${aws_s3_bucket.b.bucket_regional_domain_name}"
-    origin_id   = "${local.s3_origin_id}"
+locals {
+  s3_origin_id = "myS3Origin"
+}
 
-    s3_origin_config {
-      origin_access_identity = "origin-access-identity/cloudfront/ABCDEFG1234567"
-    }
+resource "aws_cloudfront_distribution" "s3_distribution" {
+  origin {
+    domain_name              = aws_s3_bucket.b.bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_identity.oriaccessidenti.id
+    origin_id                = local.s3_origin_id
   }
 
   enabled             = true
   is_ipv6_enabled     = false
+  comment             = "Cloud front distribution"
   default_root_object = "index.html"
 
-  aliases = ["mysite.example.com", "yoursite.example.com"]
+  logging_config {
+    include_cookies = false
+    bucket          = "mylogs.s3.amazonaws.com"
+    prefix          = "proyecto-infra"
+  }
+
+  #aliases = ["mysite.example.com", "yoursite.example.com"]
 
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "${local.s3_origin_id}"
+    target_origin_id = local.s3_origin_id
 
     forwarded_values {
       query_string = false
@@ -50,7 +59,7 @@ resource "aws_cloudfront_distribution" "s3_proy-devops" {
     path_pattern     = "/content/immutable/*"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD", "OPTIONS"]
-    target_origin_id = "${local.s3_origin_id}"
+    target_origin_id = local.s3_origin_id
 
     forwarded_values {
       query_string = false
@@ -65,7 +74,7 @@ resource "aws_cloudfront_distribution" "s3_proy-devops" {
     default_ttl            = 86400
     max_ttl                = 31536000
     compress               = true
-    viewer_protocol_policy = "redirect-to-https"
+    viewer_protocol_policy = "allow-all"
   }
 
   # Cache behavior with precedence 1
@@ -73,7 +82,7 @@ resource "aws_cloudfront_distribution" "s3_proy-devops" {
     path_pattern     = "/content/*"
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "${local.s3_origin_id}"
+    target_origin_id = local.s3_origin_id
 
     forwarded_values {
       query_string = false
@@ -87,8 +96,10 @@ resource "aws_cloudfront_distribution" "s3_proy-devops" {
     default_ttl            = 3600
     max_ttl                = 86400
     compress               = true
-    viewer_protocol_policy = "redirect-to-https"
+    viewer_protocol_policy = "allow-all"
   }
+
+  price_class = "PriceClass_200"
 
   restrictions {
     geo_restriction {
@@ -98,16 +109,16 @@ resource "aws_cloudfront_distribution" "s3_proy-devops" {
   }
 
   tags = {
-    Environment = "production"
+    Environment = "test"
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    cloudfront_default_certificate = false
   }
 }
 
-resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
-  comment = "Some comment"
+resource "aws_cloudfront_origin_access_identity" "oriaccessidenti" {
+  comment = "infra-proyecto-ide"
 }
 
 resource "aws_s3_bucket_policy" "my_bucket_policy" {
@@ -125,10 +136,10 @@ resource "aws_s3_bucket_policy" "my_bucket_policy" {
                     "Service": "cloudfront.amazonaws.com"
                 },
                 "Action": "s3:GetObject",
-                "Resource": "arn:aws:s3:::vivi-web-component-dev/*",
+                "Resource": "arn:aws:s3:::buck-david-estado-tf01/*",
                 "Condition": {
                     "StringEquals": {
-                        "AWS:SourceArn": "arn:aws:cloudfront::437209357514:distribution/E21N71EARA5PM5"
+                        "AWS:SourceArn": "arn:aws:cloudfront::730335645538:distribution/aws_cloudfront_distribution.s3_distribution.id"
                     }
                 }
             }
