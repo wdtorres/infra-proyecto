@@ -32,3 +32,9 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
+
+      - name: Descargar archivo desde GitHub
+        run: curl -o index.html https://raw.githubusercontent.com/user/repo/main/index.html
+
+      - name: Cargar archivo a S3
+        run: aws s3 cp index.html s3://bucket-proyfinal-devops-0209/
