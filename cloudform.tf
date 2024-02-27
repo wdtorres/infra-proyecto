@@ -99,7 +99,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   restrictions {
     geo_restriction {
       restriction_type = "whitelist"
-      locations        = ["US", "CA", "GB", "DE"]
+      locations        = ["US", "CO"]
     }
   }
 
@@ -136,10 +136,10 @@ data "aws_iam_policy_document" "policy_docu_pf" {
   statement {
     sid     = "AllowCloudFrontServicePrincipal"
     effect  = "Allow"
-    actions = ["s3:GetObject", "s3:ListBucket"]
+    actions = ["s3:GetObject"]
 
     resources = [
-      "${aws_s3_bucket.b.arn}/*",
+      "${aws_s3_bucket.b.arn}/inicio/*",
     ]
 
     condition {
